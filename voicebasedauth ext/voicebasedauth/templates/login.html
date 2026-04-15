@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Voice Login</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Voice Login</h2>
+
+<p class="phrase">
+Please repeat the same sentence used during registration:
+</p>
+
+<p class="sample">
+"Hello, this is my secure voice authentication sample.
+I am verifying my identity for this system."
+</p>
+
+<input type="text" id="username" placeholder="Enter Username">
+
+<button onclick="startRec()">Start Recording</button>
+<button onclick="stopRec()">Stop</button>
+<button onclick="loginVoice()">Login</button>
+
+<p id="status"></p>
+
+</div>
+
+<script>
+
+let recorder
+let chunks=[]
+
+async function startRec(){
+
+let stream = await navigator.mediaDevices.getUserMedia({audio:true})
+
+recorder = new MediaRecorder(stream)
+
+recorder.start()
+
+chunks=[]
+
+recorder.ondataavailable = e=>chunks.push(e.data)
+
+document.getElementById("status").innerText="Recording..."
+}
+
+function stopRec(){
+
+recorder.stop()
+
+document.getElementById("status").innerText="Recording stopped"
+}
+
+function loginVoice(){
+
+let blob = new Blob(chunks,{type:'audio/webm'})
+
+let form = new FormData()
+
+form.append("username",document.getElementById("username").value)
+
+form.append("audio",blob,"voice.webm")
+
+fetch("/login",{method:"POST",body:form})
+.then(r=>r.json())
+.then(data=>{
+document.getElementById("status").innerText =
+data.message + " Similarity: " + data.similarity
+})
+}
+
+</script>
+
+</body>
+</html>
